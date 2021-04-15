@@ -1,3 +1,5 @@
+import os
+
 scale = 0.2
 output = False
 mask_threshold = 0.5
@@ -13,4 +15,8 @@ no_save = False
 viz = False
 
 ##要检测的图像
-pre_img = ['/home/zhao/mydata/mask/benigns/benign_01/case0033/C_0033_1.LEFT_CC.png']
+list = os.listdir('/home/zhao/mydata/test')
+for i in range(len(list)):
+    list[i] = '/home/zhao/mydata/test/' + list[i]
+
+pre_img = list

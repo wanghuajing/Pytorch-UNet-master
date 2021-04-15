@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import Dataset
 import logging
 from PIL import Image
+from skimage import exposure
 
 
 class BasicDataset(Dataset):
@@ -24,13 +25,14 @@ class BasicDataset(Dataset):
         return len(self.ids)
 
     @classmethod
-    def preprocess(cls, pil_img, scale):
+    def preprocess(cls, pil_img, scale,equal_hist):
         w, h = pil_img.size
         newW, newH = int(scale * w), int(scale * h)
         assert newW > 0 and newH > 0, 'Scale is too small'
         pil_img = pil_img.resize((newW, newH))
         img_nd = np.array(pil_img)
-
+        if equal_hist:
+            img_nd = exposure.equalize_hist(img_nd)
         if len(img_nd.shape) == 2:
             img_nd = np.expand_dims(img_nd, axis=2)
 
@@ -57,11 +59,10 @@ class BasicDataset(Dataset):
             img = img.transpose(Image.FLIP_LEFT_RIGHT)
         assert img.size == mask.size, \
             f'Image and mask {idx} should be the same size, but are {img.size} and {mask.size}'
-        index = np.random.randint(0, 4)
+        index = 1
         scale = self.scale[index]
-        img = self.preprocess(img, scale)
-        mask = self.preprocess(mask, scale)
-
+        img = self.preprocess(img, scale, False)
+        mask = self.preprocess(mask, scale, False)
         return {
             'image': torch.from_numpy(img).type(torch.FloatTensor),
             'mask': torch.from_numpy(mask).type(torch.FloatTensor)
