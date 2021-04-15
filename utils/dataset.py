@@ -59,7 +59,7 @@ class BasicDataset(Dataset):
             img = img.transpose(Image.FLIP_LEFT_RIGHT)
         assert img.size == mask.size, \
             f'Image and mask {idx} should be the same size, but are {img.size} and {mask.size}'
-        index = 1
+        index = 0
         scale = self.scale[index]
         img = self.preprocess(img, scale, False)
         mask = self.preprocess(mask, scale, False)

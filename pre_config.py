@@ -1,12 +1,12 @@
 import os
 
-scale = 0.2
+scale = 0.05
 output = False
-mask_threshold = 0.5
+mask_threshold = 0.9
 channels = 1
 
 ##检测用的模型
-model = './scale0.2/scale0.2.pth'
+model = './checkpoints/CP_epoch200.pth'
 
 ##是否保存图片
 no_save = False
