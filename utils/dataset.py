@@ -3,6 +3,7 @@ from os import listdir
 import numpy as np
 from glob import glob
 import torch
+import cv2
 from torch.utils.data import Dataset
 import logging
 from PIL import Image
@@ -25,14 +26,22 @@ class BasicDataset(Dataset):
         return len(self.ids)
 
     @classmethod
-    def preprocess(cls, pil_img, scale,equal_hist):
+    def preprocess(cls, pil_img, scale, equal_hist):
         w, h = pil_img.size
-        newW, newH = int(scale * w), int(scale * h)
-        assert newW > 0 and newH > 0, 'Scale is too small'
+        newH = 800
+        newW = int(800 / h * w)
         pil_img = pil_img.resize((newW, newH))
-        img_nd = np.array(pil_img)
-        if equal_hist:
-            img_nd = exposure.equalize_hist(img_nd)
+        img_nd = np.array(pil_img, dtype=np.uint16)
+        img_nd = img_nd / img_nd.max()
+        half = int(img_nd.shape[1] / 2)
+        left = img_nd[:, :half]
+        right = img_nd[:, -half:]
+        if right.sum() > left.sum():
+            img_nd = cv2.flip(img_nd, 1)
+        img_nd = cv2.copyMakeBorder(img_nd, 0, 0, 0, 600 - newW, borderType=cv2.BORDER_CONSTANT, value=0)
+
+        # if equal_hist:
+        #     img_nd = exposure.equalize_hist(img_nd)
         if len(img_nd.shape) == 2:
             img_nd = np.expand_dims(img_nd, axis=2)
 
@@ -53,16 +62,10 @@ class BasicDataset(Dataset):
             f'Either no image or multiple images found for the ID {idx}: {img_file}'
         mask = Image.open(mask_file[0])
         img = Image.open(img_file[0])
-        if 'RIGHT' in mask_file[0]:
-            mask = mask.transpose(Image.FLIP_LEFT_RIGHT)
-        if 'RIGHT' in img_file[0]:
-            img = img.transpose(Image.FLIP_LEFT_RIGHT)
         assert img.size == mask.size, \
             f'Image and mask {idx} should be the same size, but are {img.size} and {mask.size}'
-        index = 0
-        scale = self.scale[index]
-        img = self.preprocess(img, scale, False)
-        mask = self.preprocess(mask, scale, False)
+        img = self.preprocess(img, self.scale, False)
+        mask = self.preprocess(mask, self.scale, False)
         return {
             'image': torch.from_numpy(img).type(torch.FloatTensor),
             'mask': torch.from_numpy(mask).type(torch.FloatTensor)

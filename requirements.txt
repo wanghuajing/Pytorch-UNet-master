@@ -8,5 +8,5 @@ future
 tqdm~=4.60.0
 
 scikit-image~=0.18.1
-opencv-python~=4.5.1.48
+opencv-python
 pandas~=1.2.4
