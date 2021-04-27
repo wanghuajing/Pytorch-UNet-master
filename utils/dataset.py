@@ -28,8 +28,12 @@ class BasicDataset(Dataset):
     @classmethod
     def preprocess(cls, pil_img, scale, equal_hist):
         w, h = pil_img.size
-        newH = 800
-        newW = int(800 / h * w)
+        # newW = int(scale * w)
+        # newH = int(scale * h)
+        # pil_img = pil_img.resize((newW, newH))
+        # img_nd = np.array(pil_img, dtype=np.uint16)
+        newH = scale
+        newW = int(scale / h * w)
         pil_img = pil_img.resize((newW, newH))
         img_nd = np.array(pil_img, dtype=np.uint16)
         img_nd = img_nd / img_nd.max()
@@ -38,7 +42,8 @@ class BasicDataset(Dataset):
         right = img_nd[:, -half:]
         if right.sum() > left.sum():
             img_nd = cv2.flip(img_nd, 1)
-        img_nd = cv2.copyMakeBorder(img_nd, 0, 0, 0, 600 - newW, borderType=cv2.BORDER_CONSTANT, value=0)
+        img_nd = cv2.copyMakeBorder(img_nd, 0, 0, 0, scale - newW, borderType=cv2.BORDER_CONSTANT,
+                                    value=img_nd[:, -10:].mean())
 
         # if equal_hist:
         #     img_nd = exposure.equalize_hist(img_nd)

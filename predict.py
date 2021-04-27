@@ -31,18 +31,19 @@ def predict_img(net, full_img, device, scale_factor=1, out_threshold=0.5):
             probs = torch.sigmoid(output)
 
         probs = probs.squeeze(0)
-
+        # w = int(full_img.size[0] / full_img.size[1] * probs.shape[2])
+        # probs = probs[:, :, :w]
         tf = transforms.Compose(
             [
                 transforms.ToPILImage(),
-                transforms.Resize(full_img.size[1]),
+                transforms.Resize((full_img.size[1], full_img.size[1])),
                 transforms.ToTensor()
             ]
         )
 
         probs = tf(probs.cpu())
         full_mask = probs.squeeze().cpu().numpy()
-
+        full_mask = full_mask[:, :full_img.size[0]]
     return full_mask > out_threshold
 
 
